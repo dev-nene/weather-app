@@ -8,8 +8,10 @@ async function getData(url) {
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const locationInput = document.querySelector("#location");
   const location = locationInput.value;
+
   if (!location) {
     alert("Location can not be empty");
     return;
@@ -18,13 +20,13 @@ form.addEventListener("submit", async (e) => {
   try {
     containerEl.textContent = "Loading...";
     const data = await getData(url);
-    renderWeather(data);
+    renderWeather(data, location);
   } catch (error) {
     console.log(error);
   }
 });
 
-function renderWeather(data) {
+function renderWeather(data, location, unitGroup = "metric") {
   const { address, currentConditions, description } = data;
 
   const {
@@ -51,9 +53,9 @@ function renderWeather(data) {
         <p><strong>UV Index:</strong> ${uvindex}</p>
       </div>
       <div>
-        <p><strong>Temperature:</strong> ${temp}°C</p>
-        <p><strong>Feels like:</strong> ${feelslike}°C</p>
-        <p><strong>Wind:</strong> ${windspeed} km/h</p>
+        <p><strong>Temperature:</strong> ${temp}${unitGroup === "metric" ? "°C" : "°F"}</p>
+        <p><strong>Feels like:</strong> ${feelslike}${unitGroup === "metric" ? "°C" : "°F"}</p>
+        <p><strong>Wind:</strong> ${windspeed} ${unitGroup === "metric" ? "km/h" : "mph"}</p>
         <p><strong>Cloud cover:</strong> ${cloudcover}%</p>
       </div>
       <div>
@@ -64,6 +66,26 @@ function renderWeather(data) {
         <p><strong>Sunrise:</strong> ${sunrise}</p>
         <p><strong>Sunset:</strong> ${sunset}</p>
       </div>
+
+      <div class="checkbox-wrapper-2">
+        <label class="label-cel">°C</label>
+        <input type="checkbox" class="sc-gJwTLC ikxBAC" ${unitGroup === "us" ? "checked" : ""}>
+        <label class="label-far">℉</label>
+      </div>
     </div>
   `;
+
+  const checkboxEl = document.querySelector(".ikxBAC");
+  checkboxEl.addEventListener("change", async function () {
+    const newUnit = this.checked ? "us" : "metric";
+    const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=${newUnit}&key=NHLJDJFWYWHFHCEK6ZYP53F9D&contentType=json`;
+
+    try {
+        containerEl.textContent = "Loading...";
+        const data = await getData(url);
+        renderWeather(data, location, newUnit);
+      } catch (error) {
+        console.log(error);
+      }
+  });
 }
