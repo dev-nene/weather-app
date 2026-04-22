@@ -1,26 +1,69 @@
-const cityEl = document.querySelector(".city");
-const longlatEl = document.querySelector(".longlat");
-const tempEl = document.querySelector(".temp");
-
 const form = document.querySelector(".form");
-const locationInput = document.querySelector("#location");
+const containerEl = document.querySelector(".container");
 
-form.addEventListener("submit", (e) => {
+async function getData(url) {
+  const response = await fetch(url);
+  return response.json();
+}
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const locationInput = document.querySelector("#location");
   const location = locationInput.value;
-
-  const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&key=NHLJDJFWYWHFHCEK6ZYP53F9D&contentType=json`;
-  async function getData() {
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      console.log(data);
-      cityEl.textContent = data.address;
-      longlatEl.textContent = `Longitude: ${data.longitude} Latitude: ${data.latitude}`;
-      tempEl.textContent = `${data.currentConditions.temp}°C`;
-    } catch (error) {
-      console.log(error);
-    }
+  if (!location) {
+    alert("Location can not be empty");
+    return;
   }
-  getData();
+  const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&key=NHLJDJFWYWHFHCEK6ZYP53F9D&contentType=json`;
+  try {
+    containerEl.textContent = "Loading...";
+    const data = await getData(url);
+    renderWeather(data);
+  } catch (error) {
+    console.log(error);
+  }
 });
+
+function renderWeather(data) {
+  const { address, currentConditions, description } = data;
+
+  const {
+    cloudcover,
+    datetime,
+    conditions,
+    feelslike,
+    icon,
+    sunrise,
+    sunset,
+    temp,
+    uvindex,
+    windspeed,
+  } = currentConditions;
+
+  containerEl.innerHTML = `
+    <div class="weather-card">
+      <div> 
+        <h2>${address}</h2>
+        <p>${description}</p>
+      </div>
+      <div>
+        <img src="./icons/${icon}.svg">
+        <p><strong>UV Index:</strong> ${uvindex}</p>
+      </div>
+      <div>
+        <p><strong>Temperature:</strong> ${temp}°C</p>
+        <p><strong>Feels like:</strong> ${feelslike}°C</p>
+        <p><strong>Wind:</strong> ${windspeed} km/h</p>
+        <p><strong>Cloud cover:</strong> ${cloudcover}%</p>
+      </div>
+      <div>
+        <p><strong>Time:</strong> ${datetime}</p>
+        <p><strong>Condition:</strong> ${conditions}</p>
+      </div>
+      <div>
+        <p><strong>Sunrise:</strong> ${sunrise}</p>
+        <p><strong>Sunset:</strong> ${sunset}</p>
+      </div>
+    </div>
+  `;
+}
